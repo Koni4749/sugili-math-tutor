@@ -46,7 +46,7 @@ if prompt := st.chat_input("질문을 입력하거나, 사진을 올리고 '풀�
     
     # 모델 설정 (시스템 프롬프트 포함)
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-2.5-flash",
         system_instruction=system_prompt
     )
 
@@ -99,4 +99,5 @@ if prompt := st.chat_input("질문을 입력하거나, 사진을 올리고 '풀�
             st.session_state.messages.append({"role": "assistant", "content": full_response})
             
         except Exception as e:
+
             st.error(f"오류가 발생했습니다: {e}")
