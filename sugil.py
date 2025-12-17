@@ -47,7 +47,7 @@ if prompt := st.chat_input("질문을 입력하거나, 사진을 올리고 '풀�
     
     # 모델 설정 (요청하신 gemini-2.5-flash-lite 유지)
     model = genai.GenerativeModel(
-        model_name="gemini-2.5-flash-lite",
+        model_name="gemma-3-27b-it",
         system_instruction=system_prompt
     )
 
@@ -95,3 +95,4 @@ if prompt := st.chat_input("질문을 입력하거나, 사진을 올리고 '풀�
             
         except Exception as e:
             st.error(f"오류가 발생했습니다: {e}")
+
