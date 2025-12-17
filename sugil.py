@@ -3,10 +3,12 @@ import google.generativeai as genai
 from PIL import Image
 
 # --- 1. 기본 설정 및 디자인 ---
-st.set_page_config(page_title="수길이 - Gemini 수학 튜터", page_icon="📐")
+# 브라우저 탭 이름도 '수학의 길잡이'로 통일했습니다.
+st.set_page_config(page_title="수길이 - 수학의 길잡이", page_icon="📐")
 
-st.title("🧑‍🏫 수길이: Gemini 수학 튜터")
-st.caption("Google Gemini 1.5 Flash 모델이 수학 문제를 도와줍니다.")
+# 메인 타이틀 변경
+st.title("🧑‍🏫 수길이: 수학의 길잡이")
+# 기존의 st.caption("...") 코드는 삭제했습니다.
 
 # 사이드바에서 API 키 입력받기
 api_key = st.sidebar.text_input("Google AI Studio API Key를 입력하세요", type="password")
@@ -30,7 +32,6 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
-        # 이미지가 저장되어 있다면 표시 (선택 사항 구현)
 
 # 이미지 업로더
 uploaded_file = st.sidebar.file_uploader("문제 사진 업로드", type=["jpg", "png", "jpeg", "webp"])
@@ -44,7 +45,7 @@ if prompt := st.chat_input("질문을 입력하거나, 사진을 올리고 '풀�
     # Gemini 설정
     genai.configure(api_key=api_key)
     
-    # 모델 설정 (시스템 프롬프트 포함)
+    # 모델 설정 (최신 모델 gemini-2.5-flash 적용됨)
     model = genai.GenerativeModel(
         model_name="gemini-2.5-flash",
         system_instruction=system_prompt
@@ -64,14 +65,11 @@ if prompt := st.chat_input("질문을 입력하거나, 사진을 올리고 '풀�
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     # --- 5. Gemini API 호출 준비 ---
-    # Gemini는 대화 기록(History)을 List[content] 형태로 받습니다.
-    # 이전 대화 내용을 Gemini 형식으로 변환
     chat_history = []
-    for msg in st.session_state.messages[:-1]: # 방금 입력한 건 제외하고 변환
+    for msg in st.session_state.messages[:-1]:
         role = "user" if msg["role"] == "user" else "model"
         chat_history.append({"role": role, "parts": [msg["content"]]})
 
-    # 현재 입력 구성 (텍스트 + 이미지)
     current_parts = [prompt]
     if image_input:
         current_parts.append(image_input)
@@ -82,10 +80,7 @@ if prompt := st.chat_input("질문을 입력하거나, 사진을 올리고 '풀�
         full_response = ""
         
         try:
-            # 채팅 세션 시작 (history 전달)
             chat = model.start_chat(history=chat_history)
-            
-            # 메시지 전송 및 스트리밍 응답
             response = chat.send_message(current_parts, stream=True)
             
             for chunk in response:
@@ -99,5 +94,4 @@ if prompt := st.chat_input("질문을 입력하거나, 사진을 올리고 '풀�
             st.session_state.messages.append({"role": "assistant", "content": full_response})
             
         except Exception as e:
-
             st.error(f"오류가 발생했습니다: {e}")
