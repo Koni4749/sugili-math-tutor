@@ -3,15 +3,15 @@ import google.generativeai as genai
 from PIL import Image
 
 # --- 1. 기본 설정 및 디자인 ---
-# 브라우저 탭 이름도 '수학의 길잡이'로 통일했습니다.
 st.set_page_config(page_title="수길이 - 수학의 길잡이", page_icon="📐")
-
-# 메인 타이틀 변경
 st.title("🧑‍🏫 수길이: 수학의 길잡이")
-# 기존의 st.caption("...") 코드는 삭제했습니다.
 
-# 사이드바에서 API 키 입력받기
-api_key = st.sidebar.text_input("Google AI Studio API Key를 입력하세요", type="password")
+# --- [수정된 부분] API 키 처리 로직 ---
+# secrets.toml 파일에 키가 있으면 그걸 쓰고, 없으면 사이드바 입력창을 띄웁니다.
+if "GOOGLE_API_KEY" in st.secrets:
+    api_key = st.secrets["GOOGLE_API_KEY"]
+else:
+    api_key = st.sidebar.text_input("Google AI Studio API Key를 입력하세요", type="password")
 
 # --- 2. 시스템 프롬프트 (수길이의 페르소나) ---
 system_prompt = """
@@ -39,13 +39,13 @@ uploaded_file = st.sidebar.file_uploader("문제 사진 업로드", type=["jpg",
 # 사용자 입력 처리
 if prompt := st.chat_input("질문을 입력하거나, 사진을 올리고 '풀어줘'라고 하세요."):
     if not api_key:
-        st.error("왼쪽 사이드바에 Google API Key를 먼저 입력해주세요!")
+        st.error("API Key가 설정되지 않았습니다. secrets.toml을 확인하거나 사이드바에 입력해주세요.")
         st.stop()
 
     # Gemini 설정
     genai.configure(api_key=api_key)
     
-    # 모델 설정 (최신 모델 gemini-2.5-flash 적용됨)
+    # 모델 설정 (요청하신 gemini-2.5-flash-lite 유지)
     model = genai.GenerativeModel(
         model_name="gemini-2.5-flash-lite",
         system_instruction=system_prompt
@@ -95,10 +95,3 @@ if prompt := st.chat_input("질문을 입력하거나, 사진을 올리고 '풀�
             
         except Exception as e:
             st.error(f"오류가 발생했습니다: {e}")
-
-
-
-
-
-
-
