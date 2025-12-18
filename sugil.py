@@ -179,7 +179,7 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
     if use_pro_model:
         # 💎 비밀번호 입력 시: Gemini 2.0 Flash (Pro 모드)
         # (만약 gemini-2.5-flash 모델이 없다면 'gemini-2.0-flash'로 수정하세요)
-        model_name = "gemini-2.5-flash" 
+        model_name = "gemini-2.5-flash-lite" 
         model = genai.GenerativeModel(
             model_name=model_name,
             system_instruction=current_system_prompt  # Gemini는 시스템 프롬프트 직접 지원
@@ -222,6 +222,7 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
                     st.error("🚨 사용량이 너무 많아요. 잠시 쉬었다 오세요!")
                 else:
                     st.error(f"오류가 발생했습니다: {e}")
+
 
 
 
