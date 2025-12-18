@@ -93,10 +93,7 @@ elif coach_option == "💡 힌트 및 오답 체크":
 else:
     mode_msg = "문제 풀이보다는 **핵심 수학 개념과 공식** 위주로 설명해 드릴게요."
 
-# 현재 모델 상태 표시 (비밀번호 입력 여부에 따라 다름)
-current_model_name = "Gemini 2.5 Flash (Pro)" if use_pro_model else "Gemma 3 (Basic)"
-with st.expander(f"📘 현재 설정: {teaching_mode} / {current_model_name}"):
-    st.write(mode_msg)
+
 
 # --- 5. 프롬프트 엔지니어링 (보안 + 인성 + 지능 통합) ---
 base_instruction = """
@@ -223,4 +220,5 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
                     st.error("🚨 사용량이 너무 많아요. 잠시 쉬었다 오세요!")
                 else:
                     st.error(f"오류가 발생했습니다: {e}")
+
 
