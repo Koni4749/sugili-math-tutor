@@ -65,14 +65,25 @@ with st.sidebar:
     
     st.divider()
 
-    # [핵심] 모드 선택 기능 추가
+    # [메인 모드 선택]
     st.subheader("🎓 학습 모드 선택")
     teaching_mode = st.radio(
-        "수길이의 교육 방식을 선택하세요:",
+        "수길이의 역할을 정해주세요:",
         ("🌟 친절한 풀이 선생님", "🕵️‍♀️ 꼼꼼한 첨삭 코치"),
-        index=0,
-        help="풀이 선생님: 정답과 과정을 알려줍니다.\n첨삭 코치: 틀린 곳만 찾아서 힌트를 줍니다."
+        index=0
     )
+    
+    # [코치 모드일 때만 나타나는 서브 옵션]
+    coach_option = "기본" # 기본값 초기화
+    if teaching_mode == "🕵️‍♀️ 꼼꼼한 첨삭 코치":
+        st.markdown("---") # 구분선
+        st.caption("🧐 구체적으로 무엇을 도와드릴까요?")
+        coach_option = st.radio(
+            "코칭 방식 선택:",
+            ("💡 힌트 및 오답 체크", "📚 관련 개념/원리 설명"),
+            index=0,
+            label_visibility="collapsed" # 라벨 숨김 (깔끔하게)
+        )
     
     st.divider()
     
@@ -84,16 +95,18 @@ with st.sidebar:
 # --- 4. 메인 화면 ---
 st.title("🧑‍🏫 수길이: 수학의 길잡이")
 
-# 모드에 따른 안내 문구 변경
+# 모드별 안내 문구 동적 변경
 if teaching_mode == "🌟 친절한 풀이 선생님":
-    mode_guide = "문제를 보여주시면 **단계별 풀이와 정답**을 친절하게 알려드려요!"
+    mode_guide = "문제를 주시면 **정답과 풀이 과정**을 시원하게 알려드려요!"
+elif coach_option == "💡 힌트 및 오답 체크":
+    mode_guide = "푼 식을 보여주세요. 정답 대신 **틀린 부분과 힌트**만 콕 집어드릴게요."
 else:
-    mode_guide = "본인이 푼 식을 보여주세요. **정답 대신 틀린 부분**을 찾아드릴게요!"
+    mode_guide = "문제 풀이보다는 **이 문제에 쓰인 수학 공식과 개념**을 설명해 드릴게요."
 
-with st.expander(f"📘 현재 모드: {teaching_mode} (클릭해서 설명 보기)"):
+with st.expander(f"📘 현재 모드: {teaching_mode} ({'풀이' if teaching_mode.startswith('🌟') else coach_option})"):
     st.info(mode_guide)
 
-# --- 5. 프롬프트 엔지니어링 (모드별 분기) ---
+# --- 5. 프롬프트 엔지니어링 (3단 분기) ---
 
 # 공통 기본 설정
 base_instruction = """
@@ -102,7 +115,7 @@ base_instruction = """
 한국어로 정중하고 격려하는 어조(해요체)를 사용하세요.
 """
 
-# 모드 1: 풀이 모드 (기존)
+# 1. 풀이 모드 (정답 O)
 prompt_solver = base_instruction + """
 **[Mode: Solver & Explainer]**
 1. 사용자가 문제를 제시하면 **단계별(Step-by-step)로 논리적인 풀이 과정**을 제시하세요.
@@ -110,18 +123,33 @@ prompt_solver = base_instruction + """
 3. 답변 끝에는 학습자의 이해를 돕기 위해 비슷한 유형의 **유사 문제(Example)**를 하나 제안하세요.
 """
 
-# 모드 2: 첨삭 모드 (신규)
-prompt_coach = base_instruction + """
-**[Mode: Error Checker & Coach]**
-1. **절대 먼저 정답이나 전체 풀이를 알려주지 마세요.** (가장 중요)
-2. 사용자가 입력한 식이나 풀이 과정(이미지/텍스트)을 분석하여 **오류(Error)나 논리적 허점**을 찾아내세요.
-3. "이 부분에서 부호가 틀린 것 같아요", "여기서는 어떤 공식을 써야 할까요?"와 같이 **질문과 힌트**를 통해 스스로 깨닫게 유도하세요.
-4. 만약 사용자가 풀이 없이 문제만 줬다면, "먼저 어떻게 풀었는지 식을 보여주시겠어요?"라고 역으로 질문하여 참여를 유도하세요.
-5. 학생이 개념을 헷갈려하면 그 **개념에 대해서만** 설명해주고, 다시 문제로 돌아와 스스로 풀게 하세요.
+# 2. 코치 모드 - 힌트/체크 (정답 X)
+prompt_coach_hint = base_instruction + """
+**[Mode: Error Checker & Hint Giver]**
+1. **절대 정답이나 전체 풀이를 먼저 알려주지 마세요.**
+2. 사용자의 풀이를 분석하여 **오류(Error)나 논리적 비약**을 찾아내세요.
+3. "이 부분 부호가 맞나요?", "여기서 어떤 공식을 적용해야 할까요?"처럼 **질문형 힌트**를 주세요.
+4. 사용자가 스스로 다시 풀어보도록 격려하세요.
 """
 
-# 현재 선택된 모드에 따라 프롬프트 확정
-current_system_prompt = prompt_solver if teaching_mode == "🌟 친절한 풀이 선생님" else prompt_coach
+# 3. 코치 모드 - 개념 설명 (정답 X, 개념 O)
+prompt_coach_concept = base_instruction + """
+**[Mode: Concept Explainer]**
+1. **문제 풀이보다는 '원리' 설명에 집중하세요.** 정답을 바로 알려주지 마세요.
+2. 이 문제를 풀기 위해 필요한 **핵심 수학 개념(Key Concept)이나 공식**이 무엇인지 파악해 설명해주세요. (예: 피타고라스 정리, 미분계수의 정의 등)
+3. 개념 설명을 마친 후, "이제 이 개념을 문제에 어떻게 적용하면 될까요?"라고 물으며 사용자가 다시 문제로 돌아가게 유도하세요.
+"""
+
+# 최종 프롬프트 결정 로직
+if teaching_mode == "🌟 친절한 풀이 선생님":
+    current_system_prompt = prompt_solver
+else:
+    # 코치 모드일 때는 서브 옵션에 따라 결정
+    if coach_option == "📚 관련 개념/원리 설명":
+        current_system_prompt = prompt_coach_concept
+    else:
+        current_system_prompt = prompt_coach_hint
+
 
 # --- 6. 세션 상태 관리 ---
 if "messages" not in st.session_state:
@@ -158,7 +186,7 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
     # --- 9. Gemma 3 호출 ---
     model = genai.GenerativeModel(model_name="gemma-3-27b-it")
 
-    # 프롬프트 조립 (선택된 모드의 프롬프트 적용)
+    # 프롬프트 조립
     combined_text = current_system_prompt + "\n\n[User Question]: " + prompt
     
     if image_input:
@@ -171,8 +199,13 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
         message_placeholder = st.empty()
         full_response = ""
         
-        # 스피너 멘트도 모드에 따라 다르게!
-        loading_msg = "수길이가 풀이하는 중... 🧠" if teaching_mode == "🌟 친절한 풀이 선생님" else "수길이가 풀이를 검토하는 중... 🧐"
+        # 로딩 멘트도 상황에 맞게!
+        if teaching_mode == "🌟 친절한 풀이 선생님":
+            loading_msg = "수길이가 풀이하는 중... 🧠"
+        elif coach_option == "📚 관련 개념/원리 설명":
+            loading_msg = "관련된 수학 개념을 찾는 중... 📖"
+        else:
+            loading_msg = "풀이 과정을 꼼꼼히 살펴보는 중... 🧐"
 
         with st.spinner(loading_msg):
             try:
