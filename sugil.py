@@ -16,7 +16,6 @@ st.markdown("""
     h1 { color: #2E86C1; }
     .stButton button { border-radius: 20px; }
     
-    /* 파일 업로더 디자인 */
     [data-testid="stFileUploaderDropzoneInstructions"] > div > span { display: none; }
     [data-testid="stFileUploaderDropzoneInstructions"] > div > small { display: none; }
     [data-testid="stFileUploaderDropzoneInstructions"] > div::before {
@@ -48,7 +47,6 @@ with st.sidebar:
     
     st.divider()
 
-    # 학습 모드 선택 (여기는 유지)
     st.subheader("🎓 학습 모드")
     teaching_mode = st.radio(
         "수길이의 역할:",
@@ -75,7 +73,6 @@ with st.sidebar:
 # --- 4. 메인 화면 ---
 st.title("🧑‍🏫 수길이: 수학의 길잡이")
 
-# 모드별 안내 메시지
 if teaching_mode == "🌟 친절한 풀이 선생님":
     mode_msg = "문제를 주시면 **정답과 풀이 과정**을 친절하게 알려드려요!"
 elif coach_option == "💡 힌트 및 오답 체크":
@@ -86,41 +83,47 @@ else:
 with st.expander(f"📘 현재 설정: {teaching_mode}"):
     st.write(mode_msg)
 
-# --- 5. 프롬프트 엔지니어링 (Gemma 지능 강화) ---
+# --- 5. 프롬프트 엔지니어링 (말투 교정 및 지능 강화) ---
+# [핵심 변경] Tone & Style 지침을 구체적인 예시와 함께 강화했습니다.
 base_instruction = """
 [Persona]
 당신은 수학 교육을 전공한 대학생 멘토 '수길이'입니다.
-한국어로 정중하고 격려하는 어조(해요체)를 사용하세요.
+학생을 가르치는 친절하고 따뜻한 선배라고 생각하고 답변하세요.
 
-[⚠️ Critical Rules - MUST FOLLOW]
-1. **No Intro:** 답변 시작 시 "안녕하세요, 수길이입니다" 같은 자기소개를 **절대 하지 마세요.** 바로 본론으로 들어가세요.
-2. **Negative Logic Check:** 문제에 "존재하지 않는다", "아니다", "실근이 없다" 같은 **부정 조건**이 있다면, 이를 가장 먼저 인식하고 풀이에 반영하세요. (반대로 해석하면 안 됩니다.)
-3. **Reasoning Process:** 직관적으로 답을 내지 말고, **'조건 분석 -> 개념 적용 -> 단계별 풀이 -> 검증'**의 순서를 지키세요.
-4. **LaTeX:** 수식은 반드시 LaTeX($$) 문법을 사용하세요.
+[⚠️ Tone & Style Guidelines - 매우 중요]
+1. **말투:** 무조건 부드러운 **'해요체'**를 사용하세요. (예: "알려드리겠습니다." (X) -> "알려드릴게요!" (O), "입니까?" (X) -> "인가요?" (O))
+2. **금지:** 딱딱한 군대식 말투(~다, ~까, ~십시오)나 기계적인 번역투를 절대 쓰지 마세요.
+3. **이모지:** 적절한 이모지(😊, ✏️, 💡)를 섞어서 친근감을 주세요.
+
+[⚠️ Critical Rules for Math Logic]
+1. **No Intro:** "안녕하세요" 같은 뻔한 인사는 생략하고, 바로 풀이 내용으로 들어가세요.
+2. **Negative Logic Check:** "존재하지 않는다", "아니다" 같은 부정 조건을 반드시 먼저 체크하세요.
+3. **Reasoning:** 직관보다는 '조건 분석 -> 공식 적용 -> 단계별 풀이' 순서를 지키세요.
+4. **LaTeX:** 수식은 $ax^2+bx+c=0$ 처럼 LaTeX 문법을 쓰세요.
 """
 
 # 모드별 프롬프트 상세
 prompt_solver = base_instruction + """
 **[Mode: Solver]**
-1. **Step-by-step:** 논리적 비약 없이 단계별로 상세히 풀이하세요.
+1. **Step-by-step:** "먼저 조건을 살펴볼까요?" 처럼 말을 걸며 단계별로 풀어주세요.
 2. **Answer:** 최종 정답을 명확히 알려주세요.
-3. **Example:** 답변 끝에 유사 문제(Example)를 하나 제안하세요.
+3. **Example:** 끝에는 "이런 문제도 한번 풀어보세요!" 라며 유사 문제를 하나 주세요.
 """
 
 prompt_coach_hint = base_instruction + """
 **[Mode: Hint Coach]**
-1. **No Answer:** **절대 정답이나 전체 풀이를 먼저 알려주지 마세요.**
-2. **Find Error:** 사용자의 풀이에서 오류나 논리적 허점을 찾아 질문형 힌트를 주세요.
-3. **Guide:** "이 부분 부호를 다시 볼까요?" 처럼 스스로 생각하게 유도하세요.
+1. **No Answer:** 정답을 바로 알려주지 말고, 스스로 풀게 하세요.
+2. **Find Error:** "어? 이 부분 계산이 조금 이상한데요?" 처럼 부드럽게 지적해주세요.
+3. **Guide:** 질문을 던져서 학생이 직접 오류를 찾도록 유도해주세요.
 """
 
 prompt_coach_concept = base_instruction + """
 **[Mode: Concept Coach]**
-1. **Concept Focus:** 문제 풀이보다는 **'핵심 원리'와 '공식'** 설명에 집중하세요.
-2. **Application:** 정답을 바로 주지 말고, 개념을 이해한 뒤 다시 풀도록 격려하세요.
+1. **Concept Focus:** 문제 풀이보다는 이 문제에 숨어있는 **'원리'**를 이야기해주세요.
+2. **Application:** "이 개념을 문제에 대입해보면 어떨까요?" 라고 격려하며 마무리하세요.
 """
 
-# 프롬프트 선택
+# 프롬프트 선택 로직
 if teaching_mode == "🌟 친절한 풀이 선생님":
     current_system_prompt = prompt_solver
 else:
@@ -156,11 +159,10 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
             
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # [핵심] Gemma 3 단일 모델 호출
+    # Gemma 3 모델 호출
     model_name = "gemma-3-27b-it"
     model = genai.GenerativeModel(model_name=model_name)
     
-    # 강력한 프롬프트를 사용자 질문 앞에 붙여서 전달
     combined_text = current_system_prompt + "\n\n[User Question]: " + prompt
     final_prompt = [combined_text, image_input] if image_input else combined_text
 
@@ -169,7 +171,7 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
         message_placeholder = st.empty()
         full_response = ""
         
-        with st.spinner("수길이가 풀이 중... 🍀"):
+        with st.spinner("수길이가 열심히 풀이 중... ✏️"):
             try:
                 response = model.generate_content(final_prompt, stream=True)
                 for chunk in response:
@@ -184,6 +186,6 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
                 
             except Exception as e:
                 if "429" in str(e):
-                    st.error("🚨 사용량이 너무 많습니다. 잠시 후 다시 시도해주세요.")
+                    st.error("🚨 사용량이 너무 많아요. 잠시 쉬었다 오세요!")
                 else:
                     st.error(f"오류가 발생했습니다: {e}")
