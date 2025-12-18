@@ -175,18 +175,25 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
             
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # --- [모델 분기 로직] ---
+# --- [모델 분기 로직: Thinking Budget 적용] ---
     if use_pro_model:
-        # 💎 비밀번호 입력 시: Gemini 2.0 Flash (Pro 모드)
-        # (만약 gemini-2.5-flash 모델이 없다면 'gemini-2.0-flash'로 수정하세요)
-        model_name = "gemini-2.5-flash-lite" 
+        # 💎 비밀번호(1234) 입력 시: Gemini 2.5 Flash + Thinking Budget 20k
+        model_name = "gemini-2.5-flash-lite"
+        
+        # [핵심 수정] Thinking Budget(출력 토큰)을 20,000으로 설정
+        generation_config = genai.types.GenerationConfig(
+            max_output_tokens=20000,  # 여기가 Thinking Budget입니다!
+            temperature=0.7
+        )
+        
         model = genai.GenerativeModel(
             model_name=model_name,
-            system_instruction=current_system_prompt  # Gemini는 시스템 프롬프트 직접 지원
+            generation_config=generation_config, # 설정 적용
+            system_instruction=current_system_prompt
         )
         final_prompt = [prompt, image_input] if image_input else prompt
         
-        spinner_text = "💎 수길이(Pro)가 고성능으로 분석 중... 🧠"
+        spinner_text = "💎 수길이(Pro)가 고성능으로 분석중... 🧠"
         
     else:
         # 🍀 평상시: Gemma 3 (무료/무제한)
@@ -222,6 +229,7 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
                     st.error("🚨 사용량이 너무 많아요. 잠시 쉬었다 오세요!")
                 else:
                     st.error(f"오류가 발생했습니다: {e}")
+
 
 
 
