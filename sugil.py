@@ -75,7 +75,7 @@ with st.sidebar:
     use_pro_model = False
     if admin_password == "1234":
         use_pro_model = True
-        st.success("💎 **Gemini 2.5 Flash** 활성화!\n(고성능 추론 모드)")
+        st.success("✔️")
     
     st.divider()
     
@@ -223,3 +223,4 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
                     st.error("🚨 사용량이 너무 많아요. 잠시 쉬었다 오세요!")
                 else:
                     st.error(f"오류가 발생했습니다: {e}")
+
