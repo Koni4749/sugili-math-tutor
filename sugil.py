@@ -10,6 +10,7 @@ st.set_page_config(
 )
 
 # --- 2. 커스텀 CSS (디자인 디테일 & 한글화 해킹) ---
+# --- 2. 커스텀 CSS (디자인 디테일 & 완벽한 한글화) ---
 st.markdown("""
 <style>
     /* 폰트 설정 */
@@ -17,28 +18,52 @@ st.markdown("""
     h1 { color: #2E86C1; }
     .stButton button { border-radius: 20px; }
 
-    /* [핵심] 파일 업로더 강제 한글화 CSS 트릭 */
+    /* [업로더 디자인 수정] */
+    
+    /* 1. 원래 있던 영어 설명글(Drag and drop...) 아예 없애기 */
     [data-testid="stFileUploaderDropzoneInstructions"] > div > span {
-        visibility: hidden; /* 원래 영어 숨기기 */
-        position: absolute;
-    }
-    [data-testid="stFileUploaderDropzoneInstructions"] > div > span::before {
-        content: "파일을 여기로 드래그하거나 클릭하세요"; /* 한글로 교체 */
-        visibility: visible;
-        position: static;
-        font-weight: bold;
-        font-size: 1.1rem;
+        display: none;
     }
     [data-testid="stFileUploaderDropzoneInstructions"] > div > small {
-        visibility: hidden; /* 원래 영어 설명 숨기기 */
+        display: none;
+    }
+
+    /* 2. 새로운 한글 설명글 넣기 (위치 자동 정렬) */
+    [data-testid="stFileUploaderDropzoneInstructions"] > div::before {
+        content: "여기를 클릭해서 사진을 올리세요";
+        display: block;
+        font-weight: bold;
+        font-size: 14px;       /* 글자 크기 줄임 */
+        color: #333;
+        margin-bottom: 8px;    /* 버튼과 간격 띄우기 */
+    }
+    
+    [data-testid="stFileUploaderDropzoneInstructions"] > div::after {
+        content: "JPG, PNG, WEBP (최대 200MB)";
+        display: block;
+        font-size: 11px;
+        color: #888;
+        margin-top: 8px;
+    }
+
+    /* 3. 'Browse files' 버튼 한글화 트릭 */
+    [data-testid="stFileUploaderDropzone"] button {
+        position: relative;
+        color: transparent !important; /* 원래 글씨(Browse files) 투명하게 숨김 */
+    }
+    
+    [data-testid="stFileUploaderDropzone"] button::after {
+        content: "파일 찾기";      /* 새로운 한글 글씨 */
+        color: #333;             /* 글씨 색상 복구 */
         position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%); /* 정중앙 배치 */
+        font-size: 14px;
+        font-weight: normal;
+        white-space: nowrap;     /* 줄바꿈 방지 */
     }
-    [data-testid="stFileUploaderDropzoneInstructions"] > div > small::before {
-        content: "200MB 제한 • JPG, PNG, WEBP 지원"; /* 한글 설명 교체 */
-        visibility: visible;
-        position: static;
-        font-size: 0.8rem;
-    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -155,3 +180,4 @@ if prompt := st.chat_input("수학 고민을 털어놓으세요..."):
                 
             except Exception as e:
                 st.error("앗, 수길이가 잠시 생각을 멈췄어요. (새로고침 하거나 다시 질문해주세요)")
+
