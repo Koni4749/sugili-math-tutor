@@ -69,7 +69,7 @@ with st.sidebar:
 
     # [Secret] 관리자 비밀번호 입력 기능 추가
     st.subheader("🔐 관리자 모드")
-    admin_password = st.text_input("비밀번호 (Pro 모드 전환)", type="password", placeholder="비밀번호 입력")
+    admin_password = st.text_input("비밀번호", type="password", placeholder="비밀번호 입력")
     
     # 비밀번호가 맞으면 변수 변경 (기본값: 1234)
     use_pro_model = False
@@ -178,7 +178,7 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
 # --- [모델 분기 로직: Thinking Budget 적용] ---
     if use_pro_model:
         # 💎 비밀번호(1234) 입력 시: Gemini 2.5 Flash + Thinking Budget 20k
-        model_name = "gemini-2.5-flash-lite"
+        model_name = "gemini-2.5-flash"
         
         # [핵심 수정] Thinking Budget(출력 토큰)을 20,000으로 설정
         generation_config = genai.types.GenerationConfig(
@@ -229,6 +229,7 @@ if prompt := st.chat_input("질문하거나, 내가 푼 식을 적어보세요..
                     st.error("🚨 사용량이 너무 많아요. 잠시 쉬었다 오세요!")
                 else:
                     st.error(f"오류가 발생했습니다: {e}")
+
 
 
 
