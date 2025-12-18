@@ -6,15 +6,39 @@ from PIL import Image
 st.set_page_config(
     page_title="수길이 - 수학의 길잡이", 
     page_icon="📐",
-    layout="centered" # 모바일에서도 보기 좋게 중앙 정렬
+    layout="centered"
 )
 
-# --- 2. 커스텀 CSS (디자인 디테일) ---
+# --- 2. 커스텀 CSS (디자인 디테일 & 한글화 해킹) ---
 st.markdown("""
 <style>
+    /* 폰트 설정 */
     .stChatMessage { font-family: 'Pretendard', sans-serif; }
     h1 { color: #2E86C1; }
     .stButton button { border-radius: 20px; }
+
+    /* [핵심] 파일 업로더 강제 한글화 CSS 트릭 */
+    [data-testid="stFileUploaderDropzoneInstructions"] > div > span {
+        visibility: hidden; /* 원래 영어 숨기기 */
+        position: absolute;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"] > div > span::before {
+        content: "파일을 여기로 드래그하거나 클릭하세요"; /* 한글로 교체 */
+        visibility: visible;
+        position: static;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"] > div > small {
+        visibility: hidden; /* 원래 영어 설명 숨기기 */
+        position: absolute;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"] > div > small::before {
+        content: "200MB 제한 • JPG, PNG, WEBP 지원"; /* 한글 설명 교체 */
+        visibility: visible;
+        position: static;
+        font-size: 0.8rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -37,13 +61,12 @@ with st.sidebar:
         st.session_state["messages"] = []
         st.rerun()
     
-    st.markdown("---")
-    st.caption("Developed by Math Edu Student\nPowered by Google Gemma 3")
+    # [삭제됨] Developed by... 문구 삭제 완료!
 
 # --- 4. 메인 화면 ---
 st.title("🧑‍🏫 수길이: 수학의 길잡이")
 
-# 사용 설명서 (접었다 폈다 가능)
+# 사용 설명서
 with st.expander("📘 수길이 사용법 (클릭해서 열기)"):
     st.markdown("""
     1. **질문하기:** 아래 입력창에 수학 궁금증을 적어주세요.
@@ -52,7 +75,6 @@ with st.expander("📘 수길이 사용법 (클릭해서 열기)"):
     """)
 
 # --- 5. 철벽 방어 시스템 프롬프트 ---
-# Gemma에게 주입할 강력한 자아 설정입니다.
 system_prompt_text = """
 [System Instruction]
 당신은 수학 교육을 전공한 대학생 멘토이자 친절한 AI 튜터 '수길이'입니다.
@@ -77,7 +99,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# 이미지 업로더 (사이드바에 배치)
+# 이미지 업로더
 uploaded_file = st.sidebar.file_uploader("📸 문제 사진 업로드", type=["jpg", "png", "jpeg", "webp"])
 
 # --- 8. 사용자 입력 처리 ---
@@ -96,15 +118,14 @@ if prompt := st.chat_input("수학 고민을 털어놓으세요..."):
     if uploaded_file:
         image_input = Image.open(uploaded_file)
         with st.chat_message("user"):
-            st.image(image_input, width=300) # 이미지 크기 조절
+            st.image(image_input, width=300)
             
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     # --- 9. Gemma 3 호출 ---
-    # 이제 무제한 & 멀티모달인 Gemma 3만 믿고 갑니다!
     model = genai.GenerativeModel(model_name="gemma-3-27b-it")
 
-    # 프롬프트 조립 (방어 기제 포함)
+    # 프롬프트 조립
     combined_text = system_prompt_text + "\n\n사용자 질문: " + prompt
     
     if image_input:
@@ -117,7 +138,6 @@ if prompt := st.chat_input("수학 고민을 털어놓으세요..."):
         message_placeholder = st.empty()
         full_response = ""
         
-        # 로딩 중 표시 (Spinner)
         with st.spinner("수길이가 머리를 굴리는 중... 🧠"):
             try:
                 response = model.generate_content(final_prompt, stream=True)
@@ -134,7 +154,4 @@ if prompt := st.chat_input("수학 고민을 털어놓으세요..."):
                 st.session_state.messages.append({"role": "assistant", "content": full_response})
                 
             except Exception as e:
-                # 에러 메시지를 사용자 친화적으로 변경
                 st.error("앗, 수길이가 잠시 생각을 멈췄어요. (새로고침 하거나 다시 질문해주세요)")
-                with st.expander("개발자용 오류 상세 확인"):
-                    st.write(e)
